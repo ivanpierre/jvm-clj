@@ -4,7 +4,7 @@ JVM manager in clojure.
 
 ## Installation
 
-For now in wrinting stage, even not alpha... ;)
+For now in writing stage, even not alpha... ;)
 
 ## Usage
 

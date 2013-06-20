@@ -32,12 +32,12 @@
    :field               '(2 [:access-flags   [:acces-flags :field]]
                             [:name-index     [:const :cst-utf8]]
                             [:descriptor     [:const :cst-type]]
-                            [:attributes     [:attribute-info :field]]))
+                            [:attributes     [:attribute-info :field]])
 
    :method              '(3 [:access-flags   [:acces-flags :field]]
                             [:name-index     [:const :cst-utf8]]
                             [:descriptor     [:const :cst-type]]
-                            [:attributes     [:attribute-info :field]]))
+                            [:attributes     [:attribute-info :field]])
    })
 
 (def ^{:doc "Definition of constant structs by keywords"}
