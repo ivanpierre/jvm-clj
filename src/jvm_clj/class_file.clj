@@ -8,12 +8,8 @@
 ;   the terms of this license.
 ;   You must not remove this notice, or any other, from this software.
 
-(ns jvm-clj.core
-  (:gen-class))
+(ns ^{:doc "Manage class file reading and writing"}
+  jvm-clj.class-file
+  {:require jvm-clj.class-struct})
 
-(require 'jvm-clj.class-struct)
-
-(defn -main
-  "tbd"
-  [& args])
-
+class-struct

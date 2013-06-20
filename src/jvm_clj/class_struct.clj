@@ -11,28 +11,44 @@
 (ns ^{:doc "Definition of JVM Class model"}
   jvm-clj.class-struct)
 
-(defonce ^{:doc "Definition of class structure"}
-  class-struct
-  '(1 [:cla-magic         :u4]
-      [:cla-minor-version :u2]
-      [:cla-major-version :u2]
-      [:cla-constant-pool :cp-info]
-      [:cla-access-flags  [:access-flags :class]]
-      [:vla-this-class    [:const :cst-class]]
-      [:cla-super-class   [:const :cst-class]]
-      [:cla-interfaces    :interface-info]
-      [:cla-fields        :field-info]
-      [:cla-attributes    [:attribure-info :class]]))
+(defn write-struct
+  [struct vide]
 
-(defonce ^{:doc "Definition of constant structs by keywords"}
+  )
+
+(def ^{:doc "Definition of class structure"}
+  class-struct
+  {:class               '(1 [:magic         :u4]
+                            [:minor-version :u2]
+                            [:major-version :u2]
+                            [:constant-pool :cp-info]
+                            [:access-flags  [:access-flags :class]]
+                            [:this-class    [:const :cst-class]]
+                            [:super-class   [:const :cst-class]]
+                            [:interfaces    :interface-info]
+                            [:fields        :field-info]
+                            [:attributes    [:attribure-info :class]])
+
+   :field               '(2 [:access-flags   [:acces-flags :field]]
+                            [:name-index     [:const :cst-utf8]]
+                            [:descriptor     [:const :cst-type]]
+                            [:attributes     [:attribute-info :field]]))
+
+   :method              '(3 [:access-flags   [:acces-flags :field]]
+                            [:name-index     [:const :cst-utf8]]
+                            [:descriptor     [:const :cst-type]]
+                            [:attributes     [:attribute-info :field]]))
+   })
+
+(def ^{:doc "Definition of constant structs by keywords"}
   constant-pool-keywords
-   {:cst-utf8            '(1  [:utf8           :utf8])
-    :cst-integer         '(3  [:value          :s4])
-    :cst-float           '(4  [:value          :f4])
-    :cst-long            '(5  [:value          :s8])
-    :cst-double          '(6  [:value          :f8])
-    :cst-class           '(7  [:name           [:const :cst-utf8]])
-    :scr-string          '(8  [:sring          [:const :cst-utf8]])
+   {:cst-utf8            '(1  :utf8)
+    :cst-integer         '(3  :s4)
+    :cst-float           '(4  :f4)
+    :cst-long            '(5  :s8)
+    :cst-double          '(6  :f8)
+    :cst-class           '(7  [:const :cst-utf8])
+    :scr-string          '(8  [:const :cst-utf8])
     :cst-field           '(9  [:class          [:const :cst-class]]
                               [:name-and-type  [:const :cst-name-and-type]])
     :cst-method          '(10 [:class          [:const :cst-class]]
@@ -43,20 +59,20 @@
                               [:descriptor     [:const :cst-utf8]])
     :cst-handle          '(15 [:kind           :kind]
                               [:reference      [:const :cst-field :cst-method :cst-interface]])
-    :cst-type            '(16 [:descriptor     [:const :cst-utf8]])
+    :cst-descriptor      '(16 [:const :cst-utf8])
     :cst-dynamic         '(18 [:bootstrap      :bootstrap-index]
                               [:name-and-type  [:const :cst-name-and-type]])})
 
 (def ^{:doc "Constant pool keyword by code"}
   constant-pool-codes
-  (into {} (map (fn [[k v]] {(first v) k}) constant-pool-keyword)))
+  (into {} (map (fn [[k v]] {(first v) k}) constant-pool-keywords)))
 
 (defn constant-by-keyword
   "Constant pool by keyword"
   [key]
   (get constant-pool-keywords key))
 
-(defn constant-keword-by-code
+(defn constant-keyword-by-code
   "Constant pool structures by index"
   [code]
   (get constant-pool-codes code))
@@ -76,8 +92,9 @@
   [key]
   (first (constant-by-keyword key)))
 
+(println (map #(constant-struct-by-code (first %)) constant-pool-codes))
 
-(defonce ^{:doc "Access modifiers definition"}
+(def ^{:doc "Access modifiers definition"}
   access-flags
   {:public        [0x0001 #{:class :field :method}]
    :private       [0x0002 #{:class :field :method}]
@@ -95,7 +112,6 @@
    :strict        [0x0800 #{:method}]
    :synthetic     [0x1000 #{:class :field :method}]
    :annotation    [0x2000 #{:class}]})
-
 
 (defn good-type?
   "Test type for access"
@@ -123,13 +139,12 @@
                  (filter #(good-type? % type)
                          access-set))))
 
-(defonce ^{:doc "Field structure"}
-  field-struct
-  '(1 [:access-flags   [:acces-flags :field]]
-      [:name-index     [:const :cst-utf8]]
-      [:descriptor     :u2]
-      [:attributes     [:attribute-info :field]]))
-
+(def ^{:doc "Defines attributes"}
+  attributes
+  {
+   :aa        (#{} 1 )
+   }
+  )
 
 (def
   ^{:doc "Each element is:
@@ -267,8 +282,8 @@
    :lor             '(129)
    :ixor            '(130)
    :lxor            '(131)
-   :iinc            '(132 [:local :u]
-                          [:const :cst-integer])
+   :iinc            '(132 [:local [:local :u]]
+                          [:increment [:const :cst-integer]])
    :i2l             '(133)
    :i2f             '(134)
    :i2d             '(135)
@@ -306,15 +321,15 @@
    :goto            '(167 :branch)
    :jsr             '(168 :branch)
    :ret             '(169)
-   :tableswitch     '(170 :padding
-                          :s4
-                          :s4
-                          :s4
-                          :offsets)
-   :lookupswitch    '(171 :padding
-                          :s4
-                          :s4
-                          :pairs)
+   :tableswitch     '(170 [:padding :padding]
+                          [:default :s4]
+                          [:min :s4]
+                          [:max :s4]
+                          [:offtests :offsets])
+   :lookupswitch    '(171 [:padding :padding]
+                          [:default :s4]
+                          [:nb-pairs :s4]
+                          [:pairs :pairs])
    :ireturn         '(172)
    :lreturn         '(173)
    :freturn         '(174)
@@ -328,9 +343,9 @@
    :invokevirtual   '(182 [:const :cst-method])
    :invokespecial   '(183 [:const :cst-method])
    :invokestatic    '(184 [:const :cst-method])
-   :invokeinterface '(185 [:const :cst-interface]
-                          :u1
-                          :u1)
+   :invokeinterface '(185 [:method [:const :cst-interface]]
+                          [:type :u1]
+                          [:zero :u1])
    :xxxunusedxxx1   '(186)
    :new             '(187 [:const :cst-class])
    :newarray        '(188 :atype)
@@ -342,8 +357,8 @@
    :monitorenter    '(194)
    :monitorexit     '(195)
    :wide            '(196 :wide-opcode)
-   :multianewarray  '(197 [:const :cst-type]
-                          :u1)
+   :multianewarray  '(197 [:type [:const :cst-type]]
+                          [:nb-dim :u1])
    :ifnull          '(198 :branch)
    :ifnonnull       '(199 :branch)
    :goto_w          '(200 :branch-wide)
