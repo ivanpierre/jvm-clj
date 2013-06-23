@@ -12,4 +12,3 @@
   jvm-clj.class-file
   (:use jvm-clj.class-struct))
 
-class-struct
