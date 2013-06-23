@@ -10,6 +10,6 @@
 
 (ns ^{:doc "Manage class file reading and writing"}
   jvm-clj.class-file
-  {:require jvm-clj.class-struct})
+  (:use jvm-clj.class-struct))
 
 class-struct
