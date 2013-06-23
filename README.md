@@ -1,25 +1,13 @@
 # jvm-clj
 
-JVM manager in clojure.
-
-## Installation
-
-For now in writing stage, even not alpha... ;)
+A Clojure library designed to ... well, that part is up to you.
 
 ## Usage
 
-
-## Options
-
-
-## Examples
-
-
-### Bugs
-
+FIXME
 
 ## License
 
-Copyright © 2013 Ivan Pierre <me@ivanpierre.ch> & kilroySoft 
+Copyright © 2013 FIXME
 
 Distributed under the Eclipse Public License, the same as Clojure.
