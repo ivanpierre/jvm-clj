@@ -17,66 +17,125 @@
   )
 
 (def ^{:doc "Definition of class structures"}
-class-structs
+structures
   { 
    ; http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.1
-   :class     {:struct '([ :magic         :u4]
-                          [:minor-version :u2]
-                          [:major-version :u2]
-                          [:constant-pool :cp-info]
-                          [:access-flags  [:access-flags :class]]
-                          [:this-class    [:const :cst-class]]
-                          [:super-class   [:const :cst-class]]
-                          [:interfaces    :interface-info]
-                          [:fields        :field-info]
-                          [:attributes    [:attribure-info :class]])}
+   :class         {:struct '([ :magic         :u4]
+                              [:minor-version :u2]
+                              [:major-version :u2]
+                              [:constant-pool :cp-info]
+                              [:access-flags  [:access-flags :class]]
+                              [:this-class    [:const        :cst-class]]
+                              [:super-class   [:const        :cst-class]]
+                              [:interfaces    :interface-info]
+                              [:fields        [:struct-array :fields]]
+                              [:methodss      [:struct-array :methods]]
+                              [:attributes    [:attribute-info :class]])}
    
    ; http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.5
-   :fields    {:struct '([ :access-flags  [:acces-flags :field]]
-                          [:name-index    [:const :cst-utf8]]
-                          [:descriptor    [:const :cst-type]]
-                          [:attributes    [:attribute-info :field]])}
+   :fields        {:struct '([ :access-flags  [:acces-flags :field]]
+                              [:name-index    [:const :cst-utf8]]
+                              [:descriptor    [:const :cst-type]]
+                              [:attributes    [:attribute-info :field]])}
    
    ; http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.6
-   :methods   {:struct '([ :access-flags  [:acces-flags :field]]
-                          [:name-index    [:const :cst-utf8]]
-                          [:descriptor    [:const :cst-type]]
-                          [:attributes    [:attribute-info :method]])}})
+   :methods       {:struct '([ :access-flags  [:acces-flags :field]]
+                              [:name-index    [:const :cst-utf8]]
+                              [:descriptor    [:const :cst-type]]
+                              [:attributes    [:attribute-info :method]])}
+   
+   ; In Code Attribute http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.3
+   :exceptions    {:struct '([ :start-pc      :u2]
+                              [:end-pc       :u2]
+                              [:handler-pc    :u2]
+                              [:catch-type    [:const :cst-class]])}
+
+   ; In exceptions Attribute http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.5
+   :throws        {:struct                    [:const      :cst-class]}
+
+   ; In innerClass Atribute http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.6
+   :inner-classes {:struct '([ :inner-class   [:const        :cst-class]]
+                              [:outer-class   [:const        :cst-class]]
+                              [:inner-name    [:const        :cst-utf8]]
+                              [:access-flags  [:access-flags :class]])}
+   
+   ; In LineNumberTable Attribute http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.12
+   :line-numbers  {:struct '([ :start-pc      :u2]
+                              [:line-number   :u2])}
+
+   ; In LocalVariableTable http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.13
+   :local-variables {:struct '([ :start-pc      :u2]
+                                [:length        :u2]
+                                [:name          [:const :cst-utf8]]
+                                [:descriptor    [:const :cst-utf8]]
+                                [:index         :u2])}
+
+   ; In LocalVariableTypeTable http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.14
+   :local-variables-types {:struct '([ :start-pc      :u2]
+                                      [:length        :u2]
+                                      [:name          [:const :cst-utf8]]
+                                      [:signature     [:const :cst-utf8]]
+                                      [:index         :u2])}
+   
+   ; RuntimeVisibleAnnotations http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.16
+   :annotations   {:struct '([ :type           [:const     :cst-utf8]]
+                              [:value-pairs    [struct-array :value-pairs]])}
+
+   ; RuntimeVisibleAnnotations http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.16
+   :value-pairs   {:struct '([ :element-name   [:const     :cst-utf8]]
+                              [:element-value  :element-value])} ; element-value is more complicated,union
+
+})
+
+
    
 ; http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.4
 (def ^{:doc "Definition of constant structs by keywords"}
   constant-pool-keywords
    {:cst-utf8            {:code 1  
                           :struct                     :utf8}
+    
     :cst-integer         {:code 3  
                           :struct                     :s4}
+    
     :cst-float           {:code 4  
                           :struct                     :f4}
+    
     :cst-long            {:code 5  
                           :struct                     :s8}
+    
     :cst-double          {:code 6  
                           :struct                     :f8}
+    
     :cst-class           {:code 7  
                           :struct                     [:const :cst-utf8]}
-    :scr-string          {:code 8  
+    
+    :cst-string          {:code 8  
                           :struct                     [:const :cst-utf8]}
+    
     :cst-field           {:code 9  
                           :struct '([ :class          [:const :cst-class]]
                                      [:name-and-type  [:const :cst-name-and-type]])}
+    
     :cst-method          {:code 10 
                           :struct '([ :class          [:const :cst-class]]
                                      [:name-and-type  [:const :cst-name-and-type]])}
+    
     :cst-interface       {:code 11 
                           :struct '([ :class          [:const :sct-clas]]
                                      [:name-and-type -[:const :cst-name-and-type]])}
+    
     :cst-name-and-type   {:code 12 
                           :struct '([ :name           [:const :cst-utf8]]
                                      [:descriptor     [:const :cst-utf8]])}
+    
     :cst-handle          {:code 15 
                           :struct '([ :kind           :kind]
                                      [:reference      [:const :cst-field :cst-method :cst-interface]])}
+    
     :cst-descriptor      {:code 16 
                           :struct                     [:const :cst-utf8]}
+    
     :cst-dynamic         {:code 18 
                           :struct '([ :bootstrap      :bootstrap-index]
                                      [:name-and-type  [:const :cst-name-and-type]])}})
@@ -134,29 +193,74 @@ class-structs
 
 ; http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7
 (def ^{:doc "Defines attributes by name"}
-  attributes
+attributes
   {
-   "ConstantValue"                        {:java 45.3}
-   "Code" 	                              {:java 45.3}
-   "StackMapTable"	                      {:java 50.0}
-   "Exceptions"	                          {:java 45.3}
-   "InnerClasses" 	                      {:java 45.3}
-   "EnclosingMethod" 	                    {:java 49.0}
-   "Synthetic" 	                          {:java 45.3}
-   "Signature" 	                          {:java 49.0}
-   "SourceFile"  	                        {:java 45.3}
-   "SourceDebugExtension" 	              {:java 49.0}
-   "LineNumberTable" 	                    {:java 45.3}
-   "LocalVariableTable" 	                {:java 45.3}
-   "LocalVariableTypeTable" 	            {:java 49.0}
-   "Deprecated" 	                        {:java 45.3}
-   "RuntimeVisibleAnnotations" 		        {:java 49.0}
-   "RuntimeInvisibleAnnotations"  	      {:java 49.0}
-   "RuntimeVisibleParameterAnnotations" 	{:java 49.0}
-   "RuntimeInvisibleParameterAnnotations" {:java 49.0}
-   "AnnotationDefault" 	                  {:java 49.0}
+   "ConstantValue"                        {:java 45.3 :type #{:field} 
+                                           :struct [:const :cst-integer :cst-float :cst-double :cst-long :cst-string]}
+   
+   "Code" 	                              {:java 45.3 :type #{:method} 
+                                          :struct '([ :max-stack       :u2]
+                                                     [:max-local       :u2]
+                                                     [:code            :code]
+                                                     [:exceptions      [:struct-array :exceptions]]
+                                                     [:attributes-info [:attributes   :code]])}
+   
+   "StackMapTable"	                      {:java 50.0 :type #{:code}
+                                          :struct :unknow} ; later, this is awfull
+   
+   "Exceptions"	                          {:java 45.3 :type #{:method}
+                                           :struct [:struct-array :throws]}
+   
+   "InnerClasses" 	                      {:java 45.3 :type #{:class}
+                                          :struct [:struct-array :inner-class]}
+   
+   "EnclosingMethod" 	                    {:java 49.0 :type #{:class}
+                                           :struct '([ :class  [:const :cst-class]]
+                                                      [:method [:const :cst-method]])}
+   
+   "Synthetic" 	                          {:java 45.3 :type #{:class, :field :method}
+                                           :struct nil}
+   
+   "Signature" 	                          {:java 45.3 :type #{:class, :field :method}
+                                           :struct [:const cst-utf8]}
+   
+   "SourceFile"  	                        {:java 45.3 :type #{:class}
+                                           :struct [:const cst-utf8]}
+   
+   "SourceDebugExtension" 	              {:java 49.0 :type #{:class}
+                                           :struct :debug}}
+   
+   "LineNumberTable" 	                    {:java 45.3 :type #{:code}
+                                           :struct [:struct-array :line-numbers]}
+   
+   "LocalVariableTable" 	                {:java 45.3 :type #{:code}
+                                           :struct [:struct-array :local-variables]}
+   
+   "LocalVariableTypeTable" 	            {:java 49.0 :type #{:code}
+                                           :struct [:struct-array :local-variables-types]}
+   
+   "Deprecated" 	                        {:java 45.3 :type #{:class, :field :method}
+                                           :struct nil}
+   
+   "RuntimeVisibleAnnotations" 		        {:java 49.0 :type #{:class, :field :method}
+                                           :struct [:struct-array annotations]}
+   
+   "RuntimeInvisibleAnnotations"  	      {:java 49.0 :type #{:class, :field :method}
+                                           :struct [:struct-array annotations]}
+   
+   "RuntimeVisibleParameterAnnotations" 	{:java 49.0 :type #{:method}
+                                           :struct [:struct-array [:struct-array annotations] :u1]}
+   
+   "RuntimeInvisibleParameterAnnotations" {:java 49.0 :type #{:method}
+                                           :struct [:struct-array [:struct-array annotations] :u1]}
+   
+   "AnnotationDefault" 	                  {:java 49.0 #{:method}
+                                           :struct ;element-value}
+   
    "BootstrapMethods"  	                  {:java 51.0}
-   })
+   
+   :else                                  {:java 45.3 :type #{:code :field :method :class}
+                                           :struct :unknow}})
 
 (defn attrbute-name-to-keyword
   [name]
@@ -165,28 +269,28 @@ class-structs
 (def ^{:doc "Each element is: {mnemonic {:code code :struct args}}"}
 opcodes-by-code
   {:nop             {:code 0}
-   :aconst_null     {:code 1}
-   :iconst_m1       {:code 2}
-   :iconst_0        {:code 3}
-   :iconst_1        {:code 4}
-   :iconst_2        {:code 5}
-   :iconst_3        {:code 6}
-   :iconst_4        {:code 7}
-   :iconst_5        {:code 8}
-   :lconst_0        {:code 9}
-   :lconst_1        {:code 10}
-   :fconst_0        {:code 11}
-   :fconst_1        {:code 12}
-   :fconst_2        {:code 13}
-   :dconst_0        {:code 14}
-   :dconst_1        {:code 15}
-   :bipush          {:code 16  :struct :s1}
-   :sipush          {:code 17  :struct :s2}
-   :ldc             {:code 18  :struct :const-short}
-   :ldc_w           {:code 19  :struct :const}
-   :ldc2_w          {:code 20  :struct [:const :cst-long :cst-double]}
-   :iload           {:code 21  :struct [:local :u]} ; :u is :u1 normally and :u2 if prefixed by wide op code
-   :lload           {:code 22  :struct [:local :u]}
+   :aconst_null     {:code 1                             :exec #(push nil)}
+   :iconst_m1       {:code 2                             :exec #(push int -1)}
+   :iconst_0        {:code 3                             :exec #(push int 0)}
+   :iconst_1        {:code 4                             :exec #(push int 1)}
+   :iconst_2        {:code 5                             :exec #(push int 2)}
+   :iconst_3        {:code 6                             :exec #(push int 3)}
+   :iconst_4        {:code 7                             :exec #(push int 4)}
+   :iconst_5        {:code 8                             :exec #(push int 5)}
+   :lconst_0        {:code 9                             :exec #(lpush 0)}
+   :lconst_1        {:code 10                            :exec #(lpush 1)}
+   :fconst_0        {:code 11                            :exec #(push (float 0))}
+   :fconst_1        {:code 12                            :exec #(push (float 1))}
+   :fconst_2        {:code 13                            :exec #(push (float 2))}
+   :dconst_0        {:code 14                            :exec #(lpush (double 0))}
+   :dconst_1        {:code 15                            :exec #(lpush (double 1))}
+   :bipush          {:code 16  :struct :s1               :exec #(push %)}
+   :sipush          {:code 17  :struct :s2               :exec #(push %)}
+   :ldc             {:code 18  :struct :const-short      :exec #(push '(const %))}
+   :ldc_w           {:code 19  :struct :const            :exec #(push '(const %))}
+   :ldc2_w          {:code 20  :struct [:const :cst-long :cst-double]      :exec #(lpush '(lconst %))}
+   :iload           {:code 21  :struct [:local :u]       :exec #(push '(local %))} 
+   :lload           {:code 22  :struct [:local :u]       :exec #(lpush '(llocal %))}
    :fload           {:code 23  :struct [:local :u]}
    :dload           {:code 24  :struct [:local :u]}
    :aload           {:code 25  :struct [:local :u]}
