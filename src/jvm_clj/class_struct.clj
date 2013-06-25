@@ -79,12 +79,11 @@ structures
    
    ; RuntimeVisibleAnnotations http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.16
    :annotations   {:struct '([ :type           [:const     :cst-utf8]]
-                              [:value-pairs    [struct-array :value-pairs]])}
+                              [:value-pairs    [:struct-array :value-pairs]])}
 
    ; RuntimeVisibleAnnotations http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.16
    :value-pairs   {:struct '([ :element-name   [:const     :cst-utf8]]
                               [:element-value  :element-value])} ; element-value is more complicated,union
-
 })
 
 
@@ -192,10 +191,8 @@ structures
                          access-set))))
 
 ; http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7
-(def ^{:doc "Defines attributes by name"}
-attributes
-  {
-   "ConstantValue"                        {:java 45.3 :type #{:field} 
+(def attributes
+  {"ConstantValue"                        {:java 45.3 :type #{:field} 
                                            :struct [:const :cst-integer :cst-float :cst-double :cst-long :cst-string]}
    
    "Code" 	                              {:java 45.3 :type #{:method} 
@@ -218,17 +215,17 @@ attributes
                                            :struct '([ :class  [:const :cst-class]]
                                                       [:method [:const :cst-method]])}
    
-   "Synthetic" 	                          {:java 45.3 :type #{:class, :field :method}
+   "Synthetic" 	                          {:java 45.3 :type #{:class :field :method}
                                            :struct nil}
    
-   "Signature" 	                          {:java 45.3 :type #{:class, :field :method}
-                                           :struct [:const cst-utf8]}
+   "Signature" 	                          {:java 45.3 :type #{:class :field :method}
+                                           :struct [:const :cst-utf8]}
    
    "SourceFile"  	                        {:java 45.3 :type #{:class}
-                                           :struct [:const cst-utf8]}
+                                           :struct [:const :cst-utf8]}
    
    "SourceDebugExtension" 	              {:java 49.0 :type #{:class}
-                                           :struct :debug}}
+                                           :struct :debug}
    
    "LineNumberTable" 	                    {:java 45.3 :type #{:code}
                                            :struct [:struct-array :line-numbers]}
@@ -239,27 +236,27 @@ attributes
    "LocalVariableTypeTable" 	            {:java 49.0 :type #{:code}
                                            :struct [:struct-array :local-variables-types]}
    
-   "Deprecated" 	                        {:java 45.3 :type #{:class, :field :method}
+   "Deprecated" 	                        {:java 45.3 :type #{:class :field :method}
                                            :struct nil}
    
-   "RuntimeVisibleAnnotations" 		        {:java 49.0 :type #{:class, :field :method}
-                                           :struct [:struct-array annotations]}
+   "RuntimeVisibleAnnotations" 		        {:java 49.0 :type #{:class :field :method}
+                                           :struct [:struct-array :annotations]}
    
-   "RuntimeInvisibleAnnotations"  	      {:java 49.0 :type #{:class, :field :method}
-                                           :struct [:struct-array annotations]}
+   "RuntimeInvisibleAnnotations"  	      {:java 49.0 :type #{:class :field :method}
+                                           :struct [:struct-array :annotations]}
    
    "RuntimeVisibleParameterAnnotations" 	{:java 49.0 :type #{:method}
-                                           :struct [:struct-array [:struct-array annotations] :u1]}
+                                           :struct [:struct-array [:struct-array :annotations] :u1]}
    
    "RuntimeInvisibleParameterAnnotations" {:java 49.0 :type #{:method}
-                                           :struct [:struct-array [:struct-array annotations] :u1]}
+                                           :struct [:struct-array [:struct-array :annotations] :u1]}
    
-   "AnnotationDefault" 	                  {:java 49.0 #{:method}
-                                           :struct ;element-value}
+   "AnnotationDefault" 	                  {:java 49.0 :type #{:method}
+                                           :struct :element-value}
    
    "BootstrapMethods"  	                  {:java 51.0}
    
-   :else                                  {:java 45.3 :type #{:code :field :method :class}
+   "unknow"                               {:java 45.3 :type #{:code :field :method :class}
                                            :struct :unknow}})
 
 (defn attrbute-name-to-keyword
@@ -269,28 +266,28 @@ attributes
 (def ^{:doc "Each element is: {mnemonic {:code code :struct args}}"}
 opcodes-by-code
   {:nop             {:code 0}
-   :aconst_null     {:code 1                             :exec #(push nil)}
-   :iconst_m1       {:code 2                             :exec #(push int -1)}
-   :iconst_0        {:code 3                             :exec #(push int 0)}
-   :iconst_1        {:code 4                             :exec #(push int 1)}
-   :iconst_2        {:code 5                             :exec #(push int 2)}
-   :iconst_3        {:code 6                             :exec #(push int 3)}
-   :iconst_4        {:code 7                             :exec #(push int 4)}
-   :iconst_5        {:code 8                             :exec #(push int 5)}
-   :lconst_0        {:code 9                             :exec #(lpush 0)}
-   :lconst_1        {:code 10                            :exec #(lpush 1)}
-   :fconst_0        {:code 11                            :exec #(push (float 0))}
-   :fconst_1        {:code 12                            :exec #(push (float 1))}
-   :fconst_2        {:code 13                            :exec #(push (float 2))}
-   :dconst_0        {:code 14                            :exec #(lpush (double 0))}
-   :dconst_1        {:code 15                            :exec #(lpush (double 1))}
-   :bipush          {:code 16  :struct :s1               :exec #(push %)}
-   :sipush          {:code 17  :struct :s2               :exec #(push %)}
-   :ldc             {:code 18  :struct :const-short      :exec #(push '(const %))}
-   :ldc_w           {:code 19  :struct :const            :exec #(push '(const %))}
-   :ldc2_w          {:code 20  :struct [:const :cst-long :cst-double]      :exec #(lpush '(lconst %))}
-   :iload           {:code 21  :struct [:local :u]       :exec #(push '(local %))} 
-   :lload           {:code 22  :struct [:local :u]       :exec #(lpush '(llocal %))}
+   :aconst_null     {:code 1};                             :exec #(push nil)}
+   :iconst_m1       {:code 2};                             :exec #(push int -1)}
+   :iconst_0        {:code 3};                             :exec #(push int 0)}
+   :iconst_1        {:code 4};                             :exec #(push int 1)}
+   :iconst_2        {:code 5};                             :exec #(push int 2)}
+   :iconst_3        {:code 6};                             :exec #(push int 3)}
+   :iconst_4        {:code 7};                             :exec #(push int 4)}
+   :iconst_5        {:code 8};                             :exec #(push int 5)}
+   :lconst_0        {:code 9};                             :exec #(lpush 0)}
+   :lconst_1        {:code 10};                            :exec #(lpush 1)}
+   :fconst_0        {:code 11};                            :exec #(push (float 0))}
+   :fconst_1        {:code 12};                            :exec #(push (float 1))}
+   :fconst_2        {:code 13};                            :exec #(push (float 2))}
+   :dconst_0        {:code 14};                            :exec #(lpush (double 0))}
+   :dconst_1        {:code 15};                            :exec #(lpush (double 1))}
+   :bipush          {:code 16  :struct :s1};               :exec #(push %)}
+   :sipush          {:code 17  :struct :s2};               :exec #(push %)}
+   :ldc             {:code 18  :struct :const-short};      :exec #(push '(const %))}
+   :ldc_w           {:code 19  :struct :const};            :exec #(push '(const %))}
+   :ldc2_w          {:code 20  :struct [:const :cst-long :cst-double]};      :exec #(lpush '(lconst %))}
+   :iload           {:code 21  :struct [:local :u]};       :exec #(push '(local %))} 
+   :lload           {:code 22  :struct [:local :u]};       :exec #(lpush '(llocal %))}
    :fload           {:code 23  :struct [:local :u]}
    :dload           {:code 24  :struct [:local :u]}
    :aload           {:code 25  :struct [:local :u]}
@@ -480,7 +477,7 @@ opcodes-by-code
    :ifnull          {:code 198 :struct :branch}
    :ifnonnull       {:code 199 :struct :branch}
    :goto_w          {:code 200 :struct :branch-wide}
-   :jsr_w           {:code 201 :branch-wide}
+   :jsr_w           {:code 201 :struct :branch-wide}
    :breakpoint      {:code 202}
    :impdep1         {:code 254}
    :impdep2         {:code 255}})
