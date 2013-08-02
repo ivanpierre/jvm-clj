@@ -34,7 +34,7 @@ structures
                              [:attributes    (:attribute-info :field)])}
    
    ; http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.6
-   :methods       {:struct ([ :access-flags  (:acces-flags :field)]
+   :methods       {:struct ([ :access-flags  (:acces-flags :method)]
                              [:name-index    (:const :cst-utf8)]
                              [:descriptor    (:const :cst-type)]
                              [:attributes    (:attribute-info :method)])}
