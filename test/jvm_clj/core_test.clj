@@ -1,7 +1,7 @@
 (ns jvm-clj.core-test
-  (:use clojure.test
-        jvm-clj.core))
+  (:require [clojure.test :refer :all]
+            [jvm-clj.core :refer :all]))
 
 (deftest a-test
   (testing "FIXME, I fail."
-    (is (= 0 1))))
+    (is (= 0 0))))

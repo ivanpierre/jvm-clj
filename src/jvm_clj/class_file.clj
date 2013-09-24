@@ -12,14 +12,4 @@
   jvm-clj.class-file
   (:use jvm-clj.class-struct))
 
-(defn read-map
-  ""
-  [struct reader]
-  (into {} (map (struct :struct))))
-
-
-
-(read-map (structures :class))
-
-(read-map (opcode :class))
-
+(def a 'b)
