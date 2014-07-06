@@ -12,4 +12,4 @@
   jvm-clj.class-file
   (:use jvm-clj.class-struct))
 
-(def a 'b)
+

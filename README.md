@@ -8,7 +8,7 @@ Download from http://example.com/FIXME.
 
 ## Usage
 
-TDB
+TDB soon
 
 ## Version
 
@@ -26,9 +26,6 @@ FIXME: listing of options this app accepts.
 
 ...
 
-### Any Other Sections
-### That You Think
-### Might be Useful
 
 ## License
 

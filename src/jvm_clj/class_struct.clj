@@ -19,93 +19,102 @@
   functions for class reading and cration. The root element of the tree is the :class element of the
   structures map. These definition are ment to be constant even if some data are calculated to create
   more efficient access structures. So there is no treatement here, only definitions and "
-  (:require [clojure.string :as str])
-  )
+  (:require [clojure.string :refer [lower-case]]))
 
 (def structures
   "Definition of class structures"
   '{
-   ; http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.1
-   :class         {:struct [:magic         :u4
-                            :minor-version :u2
-                            :major-version :u2
-                            :constant-pool (:cp-info)
-                            :access-flags  (:access-flags :class)
-                            :this-class    (:const        :cst-class)
-                            :super-class   (:const        :cst-class)
-                            :interfaces    (:interface-info)
-                            :fields        (:struct-array :fields)
-                            :methodss      (:struct-array :methods)
-                            :attributes    (:attribute-info :class)]
-                   }
+    ; http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.1
+    :class         {:struct [:magic         :u4
+                             :minor-version :u2
+                             :major-version :u2
+                             :constant-pool (:array :cp (:code :u1 (:constants)))
+                             :access-flags  :u1 ; (:access-flags :class)
+                             :this-class    :u2 ; (:const        :cst-class)
+                             :super-class   :u2 ; (:const        :cst-class)
+                             :interfaces    (:array :u2 :u2) ; (:cst-interface))
+                             :fields        (:array :u2 (:struct :fields))
+                             :methods       (:array :u2 (:struct :methods))
+                             :attributes    (:array :u2 (:code
+                                                         :u2 ; (:const :utf8)
+                                                         (:struct-length :u4 :attribute :type :class)))]
+                    }
 
-   ; http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.5
-   :fields        {:struct [:access-flags  (:acces-flags :field)
-                            :name-index    (:const :cst-utf8)
-                            :descriptor    (:const :cst-type)
-                            :attributes    (:attribute-info :field)]
-                   }
+    ; http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.5
+    :fields        {:struct [:access-flags  :u1 ; (:acces-flags :field)
+                             :name-index    :u2 ; :cst-utf8)
+                             :descriptor    :u2 ; :cst-type)
+                             :attributes    (:array :u2 (:code
+                                                         :u2 ; (:const :utf8)
+                                                         (:struct-length :u4 :attribute :type :field)))]
+                    }
 
-   ; http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.6
-   :methods       {:struct [:access-flags  (:acces-flags :method)
-                            :name-index    (:const :cst-utf8)
-                            :descriptor    (:const :cst-type)
-                            :attributes    (:attribute-info :method)]
-                   }
+    ; http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.6
+    :methods       {:struct [:access-flags  :u1 ; (:acces-flags :method)
+                             :name-index    :u2 ; (:const :cst-utf8)
+                             :descriptor    :u2 ; (:const :cst-type)
+                             :attributes    (:array :u2 (:code
+                                                         :u2 ; (:const :utf8)
+                                                         (:struct-length :u4 :attribute :type :method)))]
+                    }
 
-   ; In Code Attribute http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.3
-   :exceptions    {:struct [:start-pc      :u2
-                            :end-pc        :u2
-                            :handler-pc    :u2
-                            :catch-type    (:const :cst-class)]
-                   }
+    ; In Code Attribute http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.3
+    :exceptions    {:struct [:start-pc      :u2
+                             :end-pc        :u2
+                             :handler-pc    :u2
+                             :catch-type    :u2] ; (:const :cst-class)]
+                    }
 
-   ; In exceptions Attribute http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.5
-   :throws        {:struct  (:const      :cst-class)}
+    ; In exceptions Attribute http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.5
+    :throws        {:struct  (:const      :u2)} ; :cst-class)}
 
-   ; In innerClass Atribute http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.6
-   :inner-classes {:struct [:inner-class   (:const :cst-class)
-                            :outer-class   (:const :cst-class)
-                            :inner-name    (:const :cst-utf8)
-                            :access-flags  (:access-flags :class)]
-                   }
+    ; In innerClass Atribute http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.6
+    :inner-classes {:struct [:inner-class   :u2 ; (:const :cst-class)
+                             :outer-class   :u2 ; (:const :cst-class)
+                             :inner-name    :u2 ; (:const :cst-utf8)
+                             :access-flags  :u1] ; (:access-flags :class)]
+                    }
 
-   ; In LineNumberTable Attribute http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.12
-   :line-numbers  {:struct [:start-pc      :u2
-                            :line-number   :u2]
-                   }
+    ; In LineNumberTable Attribute http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.12
+    :line-numbers  {:struct [:start-pc      :u2
+                             :line-number   :u2]
+                    }
 
-   ; In LocalVariableTable http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.13
-   :local-variables {:struct [:start-pc      :u2
-                              :length        :u2
-                              :name          (:const :cst-utf8)
-                              :descriptor    (:const :cst-utf8)
-                              :index         :u2]
-                     }
+    ; In LocalVariableTable http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.13
+    :local-variables {:struct [:start-pc      :u2
+                               :length        :u2
+                               :name          :u2 ; (:const :cst-utf8)
+                               :descriptor    :u2 ; (:const :cst-utf8)
+                               :index         :u2]
+                      }
 
-   ; In LocalVariableTypeTable http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.14
-   :local-variables-types {:struct [:start-pc      :u2
-                                    :length        :u2
-                                    :name          (:const :cst-utf8)
-                                    :signature     (:const :cst-utf8)
-                                    :index         :u2]
-                           }
+    ; In LocalVariableTypeTable http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.14
+    :local-variables-types {:struct [:start-pc      :u2
+                                     :length        :u2
+                                     :name          :u2 ; (:const :cst-utf8)
+                                     :signature     :u2 ; (:const :cst-utf8)
+                                     :index         :u2]
+                            }
 
-   ; RuntimeVisibleAnnotations http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.16
-   :annotations   {:struct [:type           (:const     :cst-utf8)
-                            :value-pairs    (:struct-array :value-pairs)]
-                   }
+    ; RuntimeVisibleAnnotations http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.16
+    :annotations   {:struct [:type           :u2 ; (:const     :cst-utf8)
+                             :value-pairs    (:struct-array :value-pairs)]
+                    }
 
-   ; RuntimeVisibleAnnotations http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.16
-   :value-pairs   {:struct [:element-name   (:const     :cst-utf8)
-                            :element-value  (:element-value)]
-                   } ; element-value is more complicated,union
-   })
+    ; RuntimeVisibleAnnotations http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.16
+    :value-pairs   {:struct [:element-name   :u2 ; (:const     :cst-utf8)
+                             :element-value  (:element-value)]
+                    } ; element-value is more complicated,union
+
+    :case          {:struct [:value :s4
+                             :label :s4]
+                    }
+    })
 
 ; http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.4
 (def constants-by-key
   "Definition of constant structs by keywords"
-  `{:cst-utf8           {:code 1
+  `{:cst-utf8           {:code 10
                          :struct :utf8}
 
     :cst-integer         {:code 3
@@ -121,48 +130,52 @@
                           :struct :f8}
 
     :cst-class           {:code 7
-                          :struct (:const :cst-utf8)}
+                          :struct :u2} ; (:const :cst-utf8)}
 
     :cst-string          {:code 8
-                          :struct (:const :cst-utf8)}
+                          :struct :u2} ; (:const :cst-utf8)}
 
     :cst-field           {:code 9
-                          :struct [:class            (:const :cst-class)
-                                   :name-and-type    (:const :cst-name-and-type)]}
+                          :struct [:class            :u2 ; (:const :cst-class)
+                                   :name-and-type    :u2]} ; (:const :cst-name-and-type)]}
 
     :cst-method          {:code 10
-                          :struct [:class            (:const :cst-class)
-                                   :name-and-type    (:const :cst-name-and-type)]}
+                          :struct [:class            :u2 ; (:const :cst-class)
+                                   :name-and-type    :u2]} ; (:const :cst-name-and-type)]}
 
     :cst-interface       {:code 11
-                          :struct [:class            (:const :sct-clas)
-                                   :name-and-type    (:const :cst-name-and-type)]}
+                          :struct [:class            :u2 ; (:const :sct-clas)
+                                   :name-and-type    :u2]} ; (:const :cst-name-and-type)]}
 
     :cst-name-and-type   {:code 12
-                          :struct [:name             (:const :cst-utf8)
-                                   :descriptor       (:const :cst-utf8)]}
+                          :struct [:name             :u2 ; (:const :cst-utf8)
+                                   :descriptor       :u2]} ; (:const :cst-utf8)]}
 
     :cst-handle          {:code 15
-                          :struct [:kind             :kind
-                                   :reference        (:const :cst-field :cst-method :cst-interface)]}
+                          :struct [:kind             :u1 ; :kind
+                                   :reference        :u2]} ; (:const :cst-field :cst-method :cst-interface)]}
 
     :cst-descriptor      {:code 16
                           :struct (:const :cst-utf8)}
 
     :cst-dynamic         {:code 18
-                          :struct [:bootstrap        (:bootstrap-index)
-                                   :name-and-type    (:const :cst-name-and-type)]}
+                          :struct [:bootstrap        :u2 ; (:bootstrap-index)
+                                   :name-and-type    :u2]} ; (:const :cst-name-and-type)]}
     })
+
+; The internal constant table will have the following structure
+; {{type: value:} index} to manage identical values and parsing source code
+; and [{type: value:}] to get value from code
 
 (defn swap-keys
   "Create new map from a map of maps. Making key a mapped value by new
-   and addik key as value mapped by old.
-   {k {new val ...}} -> {val {old k ...}}"
+  and addik key as value mapped by old.
+  {k {new val ...}} -> {val {old k ...}}"
   [new old map]
   (reduce-kv (fn [r k v] (into r {(get v new)
                                   (dissoc
-                                    (into v {old k})
-                                    new)}))
+                                   (into v {old k})
+                                   new)}))
              {} map))
 
 
@@ -172,25 +185,25 @@
 
 (def access-flags
   "Access modifiers definition
-    Class http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.1-200-E.1
-    Field http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.5-200-A.1
-    Method http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.6-200-A.1"
+  Class http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.1-200-E.1
+  Field http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.5-200-A.1
+  Method http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.6-200-A.1"
   '{:public       {:code 0x0001 :type #{:class :field :method}}
-   :private       {:code 0x0002 :type #{:class :field :method}}
-   :protected     {:code 0x0004 :type #{:class :field :method}}
-   :static        {:code 0x0008 :type #{:field :method}}
-   :final         {:code 0x0010 :type #{:class :field :method}}
-   :synchronized  {:code 0x0020 :type #{:method}}
-   :volatile      {:code 0x0040 :type #{:field}}
-   :bridge        {:code 0x0040 :type #{:method}}
-   :varargs       {:code 0x0080 :type #{:method}}
-   :transient     {:code 0x0080 :type #{:field}}
-   :native        {:code 0x0100 :type #{:method}}
-   :interface     {:code 0x0200 :type #{:class}}
-   :abstract      {:code 0x0400 :type #{:class :method}}
-   :strict        {:code 0x0800 :type #{:method}}
-   :synthetic     {:code 0x1000 :type #{:class :field :method}}
-   :annotation    {:code 0x2000 :type #{:class}}})
+    :private       {:code 0x0002 :type #{:class :field :method}}
+    :protected     {:code 0x0004 :type #{:class :field :method}}
+    :static        {:code 0x0008 :type #{:field :method}}
+    :final         {:code 0x0010 :type #{:class :field :method}}
+    :synchronized  {:code 0x0020 :type #{:method}}
+    :volatile      {:code 0x0040 :type #{:field}}
+    :bridge        {:code 0x0040 :type #{:method}}
+    :varargs       {:code 0x0080 :type #{:method}}
+    :transient     {:code 0x0080 :type #{:field}}
+    :native        {:code 0x0100 :type #{:method}}
+    :interface     {:code 0x0200 :type #{:class}}
+    :abstract      {:code 0x0400 :type #{:class :method}}
+    :strict        {:code 0x0800 :type #{:method}}
+    :synthetic     {:code 0x1000 :type #{:class :field :method}}
+    :annotation    {:code 0x2000 :type #{:class}}})
 
 (defn good-type?
   "Test type for access"
@@ -221,76 +234,78 @@
 (def attributes
   "Attributes definition"
   `{"ConstantValue"                       {:java 45.3 :type #{:field}
-                                           :struct (:const :cst-integer :cst-float :cst-double :cst-long :cst-string)}
+                                           :struct :u2} ; (:const :cst-integer :cst-float :cst-double :cst-long :cst-string)}
 
     "Code" 	                              {:java 45.3 :type #{:method}
-                                           :struct [:max-stack       (:u2)
-                                                    :max-local       (:u2)
-                                                    :code            (:code)
-                                                    :exceptions      (:struct-array :exceptions)
-                                                    :attributes-info (:attributes   :code)]}
+                                           :struct [:max-stack       :u2
+                                                    :max-local       :u2
+                                                    :code            :code
+                                                    :exceptions      (:array :u2 (:struct :exceptions))
+                                                    :attributes      (:array :u2 (:code
+                                                                                  :u2 ; (:const :utf8)
+                                                                                  (:struct-length :u4 :attribute :type :code)))]}
 
     "StackMapTable"	                      {:java 50.0 :type #{:code}
-                                           :struct (:unknow)} ; later, this is awfull
+                                           :struct nil} ; later, this is awfull
 
     "Exceptions"	                        {:java 45.3 :type #{:method}
-                                           :struct (:struct-array :throws)}
+                                           :struct (:array :u2 (:struct :throws))}
 
     "InnerClasses" 	                      {:java 45.3 :type #{:class}
-                                           :struct (:struct-array :inner-class)}
+                                           :struct (:array :u2 (:struct :inner-class))}
 
     "EnclosingMethod" 	                  {:java 49.0 :type #{:class}
-                                           :struct [:class  (:const :cst-class)
-                                                    :method (:const :cst-method)]}
+                                           :struct [:class  :u2 ; (:const :cst-class)
+                                                    :method :u2]} ; (:const :cst-method)]}
 
     "Synthetic" 	                        {:java 45.3 :type #{:class :field :method}
                                            :struct nil}
 
     "Signature" 	                        {:java 45.3 :type #{:class :field :method}
-                                           :struct (:const :cst-utf8)}
+                                           :struct :u2} ; (:const :cst-utf8)}
 
     "SourceFile"  	                      {:java 45.3 :type #{:class}
-                                           :struct (:const :cst-utf8)}
+                                           :struct :u2} ; (:const :cst-utf8)}
 
     "SourceDebugExtension" 	              {:java 49.0 :type #{:class}
-                                           :struct :debug}
+                                           :struct nil}
 
     "LineNumberTable" 	                  {:java 45.3 :type #{:code}
-                                           :struct (:struct-array :line-numbers)}
+                                           :struct (:array :u2 (:struct :line-numbers))}
 
     "LocalVariableTable" 	                {:java 45.3 :type #{:code}
-                                           :struct (:struct-array :local-variables)}
+                                           :struct (:array :u2(:struct :local-variables))}
 
     "LocalVariableTypeTable" 	            {:java 49.0 :type #{:code}
-                                           :struct (:struct-array :local-variables-types)}
+                                           :struct (:array :u2 (:struct :local-variables-types))}
 
     "Deprecated" 	                        {:java 45.3 :type #{:class :field :method}}
 
     "RuntimeVisibleAnnotations"           {:java 49.0 :type #{:class :field :method}
-                                           :struct (:struct-array :annotations)}
+                                           :struct (:array :u2 (:struct :annotations))}
 
     "RuntimeInvisibleAnnotations"  	      {:java 49.0 :type #{:class :field :method}
-                                           :struct (:struct-array :annotations)}
+                                           :struct (:array :u2 (:struct :annotations))}
 
     "RuntimeVisibleParameterAnnotations" 	{:java 49.0 :type #{:method}
-                                           :struct (:struct-array (:struct-array :annotations) :u1)}
+                                           :struct (:array :u1 (:struct :annotations))}
 
     "RuntimeInvisibleParameterAnnotations" {:java 49.0 :type #{:method}
-                                            :struct (:struct-array (:struct-array :annotations) :u1)}
+                                            :struct (:array :u1 (:struct :annotations))}
 
     "AnnotationDefault" 	                {:java 49.0 :type #{:method}
-                                           :struct (:element-value)}
+                                           :struct (:struct :element-value)}
 
     "BootstrapMethods"  	                {:java 51.0}
 
     :else                                 {:java 45.3 :type #{:code :field :method :class}
-                                           :struct (:unknow)}
+                                           :struct nil}
     })
 
 (defn attribute-name-to-keyword
   "Change attribute string name to keyword"
   [name]
-  (keyword (str/lower-case name)))
+  (keyword (lower-case name)))
 
 (def attributes-by-code
   "Each element is: {code {:key key :java vers :type type :struct args}}"
@@ -324,16 +339,16 @@
     :fconst_2        {:code 13};                                :exec #(push (float 2))}
     :dconst_0        {:code 14};                                :exec #(lpush (double 0))}
     :dconst_1        {:code 15};                                :exec #(lpush (double 1))}
-    :bipush          {:code 16  :struct :s1}  ;                 :exec #(push (byte %)}
-    :sipush          {:code 17  :struct :s2};                   :exec #(push (single %))}
-    :ldc             {:code 18  :struct (:const)};              :exec #(push '(const %))}
-    :ldc_w           {:code 19  :struct (:const :cst-long :cst-double)};  :exec #(lpush '(const %))}
-    :ldc2_w          {:code 20  :struct (:lconst :cst-long :cst-double)}; :exec #(lpush '(lconst %))}
-    :iload           {:code 21  :struct (:local :u)};           :exec #(push '(local %))}
-    :lload           {:code 22  :struct (:local :u)};           :exec #(lpush '(llocal %))}
-    :fload           {:code 23  :struct (:local :u)}
-    :dload           {:code 24  :struct (:local :u)}
-    :aload           {:code 25  :struct (:local :u)}
+    :bipush          {:code 16  :struct :s1} ;                  :exec #(push (byte %)}
+    :sipush          {:code 17  :struct :s2} ;                  :exec #(push (single %))}
+    :ldc             {:code 18  :struct :u2} ; (:const )};              :exec #(push '(const %))}
+    :ldc_w           {:code 19  :struct :u2} ; (:const :cst-long :cst-double)};  :exec #(lpush '(const %))}
+    :ldc2_w          {:code 20  :struct :u4} ; (:lconst :cst-long :cst-double)}; :exec #(lpush '(lconst %))}
+    :iload           {:code 21  :struct :u} ; (:local :u)};           :exec #(push '(local %))}
+    :lload           {:code 22  :struct :u} ; (:local :u)};           :exec #(lpush '(llocal %))}
+    :fload           {:code 23  :struct :u} ; (:local :u)}
+    :dload           {:code 24  :struct :u} ; (:local :u)}
+    :aload           {:code 25  :struct :u} ; (:local :u)}
     :iload_0         {:code 26}
     :iload_1         {:code 27}
     :iload_2         {:code 28}
@@ -362,11 +377,11 @@
     :baload          {:code 51}
     :caload          {:code 52}
     :saload          {:code 53}
-    :istore          {:code 54  :struct (:local :u)}
-    :lstore          {:code 55  :struct (:local :u)}
-    :fstore          {:code 56  :struct (:local :u)}
-    :dstore          {:code 57  :struct (:local :u)}
-    :astore          {:code 58  :struct (:local :u)}
+    :istore          {:code 54  :struct :u} ; (:local :u)}
+    :lstore          {:code 55  :struct :u} ; (:local :u)}
+    :fstore          {:code 56  :struct :u} ; (:local :u)}
+    :dstore          {:code 57  :struct :u} ; (:local :u)}
+    :astore          {:code 58  :struct :u} ; (:local :u)}
     :istore_0        {:code 59}
     :istore_1        {:code 60}
     :istore_2        {:code 61}
@@ -440,8 +455,8 @@
     :lor             {:code 129}
     :ixor            {:code 130}
     :lxor            {:code 131}
-    :iinc            {:code 132 :struct [:local     (:local :u)
-                                         :increment (:const :cst-integer)]}
+    :iinc            {:code 132 :struct [:local     :u ; (:local :u)
+                                         :increment :u2]} ; (:const :cst-integer)]}
     :i2l             {:code 133}
     :i2f             {:code 134}
     :i2d             {:code 135}
@@ -462,65 +477,62 @@
     :fcmpg           {:code 150}
     :dcmpl           {:code 151}
     :dcmpg           {:code 152}
-    :ifeq            {:code 153 :struct :branch}
-    :ifne            {:code 154 :struct :branch}
-    :iflt            {:code 155 :struct :branch}
-    :ifge            {:code 156 :struct :branch}
-    :ifgt            {:code 157 :struct :branch}
-    :ifle            {:code 158 :struct :branch}
-    :if_icmpeq       {:code 159 :struct :branch}
-    :if_icmpne       {:code 160 :struct :branch}
-    :if_icmplt       {:code 161 :struct :branch}
-    :if_icmpge       {:code 162 :struct :branch}
-    :if_icmpgt       {:code 163 :struct :branch}
-    :if_icmple       {:code 164 :struct :branch}
-    :if_acmpeq       {:code 165 :struct :branch}
-    :if_acmpne       {:code 166 :struct :branch}
-    :goto            {:code 167 :struct :branch}
-    :jsr             {:code 168 :struct :branch}
+    :ifeq            {:code 153 :struct :s4} ; :branch}
+    :ifne            {:code 154 :struct :s4} ; :branch}
+    :iflt            {:code 155 :struct :s4} ; :branch}
+    :ifge            {:code 156 :struct :s4} ; :branch}
+    :ifgt            {:code 157 :struct :s4} ; :branch}
+    :ifle            {:code 158 :struct :s4} ; :branch}
+    :if_icmpeq       {:code 159 :struct :s4} ; :branch}
+    :if_icmpne       {:code 160 :struct :s4} ; :branch}
+    :if_icmplt       {:code 161 :struct :s4} ; :branch}
+    :if_icmpge       {:code 162 :struct :s4} ; :branch}
+    :if_icmpgt       {:code 163 :struct :s4} ; :branch}
+    :if_icmple       {:code 164 :struct :s4} ; :branch}
+    :if_acmpeq       {:code 165 :struct :s4} ; :branch}
+    :if_acmpne       {:code 166 :struct :s4} ; :branch}
+    :goto            {:code 167 :struct :s4} ; :branch}
+    :jsr             {:code 168 :struct :s4} ; :branch}
     :ret             {:code 169}
     :tableswitch     {:code 170 :struct [:padding  :padding
                                          :default  :s4
-                                         :min      :s4
-                                         :max      :s4
-                                         :offtests :offsets]}
+                                         :offsets (:array (:range :s4 :s4) :s4)]}
     :lookupswitch    {:code 171 :struct [:padding  :padding
                                          :default  :s4
-                                         :nb-pairs :s4
-                                         :pairs    :pairs]}
+                                         :pairs   (:array :u4 (:struct :case))]}
     :ireturn         {:code 172}
     :lreturn         {:code 173}
     :freturn         {:code 174}
     :dreturn         {:code 175}
     :areturn         {:code 176}
     :return          {:code 177}
-    :getstatic       {:code 178 :struct (:const :cst-field)}
-    :putstatic       {:code 179 :struct (:const :cst-field)}
-    :getfield        {:code 180 :struct (:const :cst-field)}
-    :putfield        {:code 181 :struct (:const :cst-field)}
-    :invokevirtual   {:code 182 :struct (:const :cst-method)}
-    :invokespecial   {:code 183 :struct (:const :cst-method)}
-    :invokestatic    {:code 184 :struct (:const :cst-method)}
-    :invokeinterface {:code 185 :struct [:method (:const :cst-interface)
+    :getstatic       {:code 178 :struct :u2} ; (:const :cst-field)}
+    :putstatic       {:code 179 :struct :u2} ; (:const :cst-field)}
+    :getfield        {:code 180 :struct :u2} ; (:const :cst-field)}
+    :putfield        {:code 181 :struct :u2} ; (:const :cst-field)}
+    :invokevirtual   {:code 182 :struct :u2} ; (:const :cst-method)}
+    :invokespecial   {:code 183 :struct :u2} ; (:const :cst-method)}
+    :invokestatic    {:code 184 :struct :u2} ; (:const :cst-method)}
+    :invokeinterface {:code 185 :struct [:method :u2 ; (:const :cst-interface)
                                          :type   :u1
                                          :zero   :u1]}
     :xxxunusedxxx1   {:code 186}
-    :new             {:code 187 :struct (:const :cst-class)}
-    :newarray        {:code 188 :struct :atype}
-    :anewarray       {:code 189 :struct (:const :cst-type)}
+    :new             {:code 187 :struct :u2} ; (:const :cst-class)}
+    :newarray        {:code 188 :struct :u1} ; :atype}
+    :anewarray       {:code 189 :struct :u2} ; (:const :cst-utf8)}
     :arraylength     {:code 190}
     :athrow          {:code 191}
-    :checkcast       {:code 192 :struct (:const :cst-class)}
-    :instanceof      {:code 193 :struct (:const :cst-class)}
+    :checkcast       {:code 192 :struct :u2} ; (:const :cst-class)}
+    :instanceof      {:code 193 :struct :u2} ; (:const :cst-class)}
     :monitorenter    {:code 194}
     :monitorexit     {:code 195}
     :wide            {:code 196 :struct :wide-opcode}
-    :multianewarray  {:code 197 :struct [:type   (:const :cst-type)
+    :multianewarray  {:code 197 :struct [:type   :u2 ; (:const :cst-type)
                                          :nb-dim :u1]}
-    :ifnull          {:code 198 :struct :branch}
-    :ifnonnull       {:code 199 :struct :branch}
-    :goto_w          {:code 200 :struct :branch-wide}
-    :jsr_w           {:code 201 :struct :branch-wide}
+    :ifnull          {:code 198 :struct :s4} ; :branch}
+    :ifnonnull       {:code 199 :struct :s4} ; :branch}
+    :goto_w          {:code 200 :struct :s8} ; :branch_w}
+    :jsr_w           {:code 201 :struct :s8} ; :branch_w}
     :breakpoint      {:code 202}
     :impdep1         {:code 254}
     :impdep2         {:code 255}})
@@ -538,4 +550,42 @@ opcodes-by-code
   (-> table
       (get elem)
       (get key)))
+
+;; Protocols
+(defprotocol JvmReader
+  ""
+  (read ))
+
+
+
+(defn read-struct
+  "Read a :struct element in the reader and put it in a new writer"
+  [reader writer structure]
+  ; (if )
+  )
+
+(defn read-elem
+  "Read a single :struct element according to the format"
+  [reader writer format]
+  (let [new-writer (new-empty writer)]
+    (write new-writer (read reader format))))
+
+(defn read-compound
+  "Read whole array of :struct from reader and put it in the writer as a map"
+  [reader writer array]
+  (let [new-writer (writer new-map)
+        nb-elem (count array)]
+    (loop [i 0
+           new-writer (writer new-map)]
+      (if (< i nb-elem)
+        (let [key    (array i)
+              format (array (inc i))]
+          (recur (+ 2 i)(write-key new-writer key (read-elem (read-key reader key) writer format))))))))
+
+(defn read
+  "Read an element of a definition in the reader and put it in a new writer as a map element"
+  [reader writer descriptor key]
+  (let [read-writer (read-struct reader writer
+                                 (:struct (get descriptor key)))]
+    (write-key (new-map read-writer) key read-writer)))
 
