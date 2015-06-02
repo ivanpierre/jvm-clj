@@ -1,6 +1,7 @@
 (ns jvm-clj.class-struct-test
   (:require [clojure.test :refer :all])
-  (:use midje.sweet jvm-clj.class-struct ))
+  (:use jvm-clj.class-struct
+        midje.sweet))
 
 (use 'clojure.pprint)
 
