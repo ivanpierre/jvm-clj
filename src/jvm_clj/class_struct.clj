@@ -31,6 +31,7 @@
                              :minor-version :u2
                              :major-version :u2
                              :constant-pool (:array :cp (:code :u1 (:constants)))
+
                              :access-flags  :u1 ; (:access-flags :class)
                              :this-class    :u2 ; (:const        :cst-class)
                              :super-class   :u2 ; (:const        :cst-class)
