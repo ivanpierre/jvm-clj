@@ -104,7 +104,7 @@
                                            :struct nil}
    })
 
-(defn attribute-name-to-keyword
+(defn- attribute-name-to-keyword
   "Change attribute string name to keyword"
   [name]
   (keyword (lower-case name)))
