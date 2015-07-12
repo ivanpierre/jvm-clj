@@ -19,7 +19,7 @@ http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html
 Every element of the tree is associated with a type definition used to call the transformation
 functions for class reading and cration. The root element of the tree is the :class element of the
 structures map. These definition are ment to be constant even if some data are calculated to create
-more efficient access structures. So there is no treatement here, only definitions."
+more efficient access structures. So there is no  treatement here, only definitions."
   )
 
 (defmacro structures
