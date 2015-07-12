@@ -1,4 +1,5 @@
-;   jvm-clj  JVM management library ;   Copyright  2013 Ivan Pierre <me@ivanpierre.ch>. All rights reserved.
+;   jvm-clj  JVM management library
+;   Copyright  2015 Ivan Pierre <me@ivanpierre.ch>. All rights reserved.
 ;
 ;   The use and distribution terms for this software are covered by the ;   Eclipse Public License 1.0 
 ;   which can be found in the file epl-v10.html at the root of this distribution.
@@ -7,7 +8,6 @@
 ;   You must not remove this notice, or any other, from this software.
 
 (ns ^{:doc "Manage class file reading and writing"}
-  jvm-clj.class-file
-  (:use jvm-clj.class-struct))
+jvm-clj.class-file)
 
 
