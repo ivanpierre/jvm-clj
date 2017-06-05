@@ -11,7 +11,6 @@
 
 (ns jvm-clj.attributes
   (:require
-    [camel-snake-kebab.extra :refer []]
     [camel-snake-kebab.core :refer :all]
     ))
 
