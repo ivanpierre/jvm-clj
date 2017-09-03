@@ -8,6 +8,6 @@
 ;   You must not remove this notice, or any other, from this software.
 
 (ns ^{:doc "Manage class file reading and writing"}
-jvm-clj.class-file)
+ jvm-clj.class-file)
 
 

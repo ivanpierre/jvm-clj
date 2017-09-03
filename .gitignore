@@ -13,10 +13,11 @@ pom.xml.asc
 .lein-plugins
 .lein-repl-history
 .classpath
-#*
 .project
 /.settings
 .DS_Store
 classpath
 /.idea
+/.settings
+/.vscode
 *.iml

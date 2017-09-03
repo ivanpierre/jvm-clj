@@ -7,6 +7,6 @@
 ;   You must not remove this notice, or any other, from this software.
 
 (ns jvm-clj.class-write
-  "Functions for class writing"
-)
+  "Functions for class writing")
+
 

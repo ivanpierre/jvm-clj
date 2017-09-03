@@ -11,8 +11,8 @@
 
 (ns jvm-clj.attributes
   (:require
-    [camel-snake-kebab.core :refer :all]
-    ))
+    [camel-snake-kebab.core :refer :all]))
+    
 
 ;;; http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7
 (defmacro attributes-def
@@ -100,6 +100,6 @@
                                               :type   #{:method}
                                               :struct (:struct :element-value)}
 
-    :bootstrap-methods                       {:java 51.0}
-   })
+    :bootstrap-methods                       {:java 51.0}})
+   
 

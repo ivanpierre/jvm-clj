@@ -6,7 +6,5 @@
 ;   the terms of this license.
 ;   You must not remove this notice, or any other, from this software.
 
-(ns ^{:doc
-      "Functions for class reading"}
-  jvm-clj.class-read)
+(ns jvm-clj.class-read)
 

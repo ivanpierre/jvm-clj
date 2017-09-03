@@ -60,8 +60,8 @@
 
     :cst-dynamic       {:code   18
                         :struct [:bootstrap :u2             ; (:bootstrap-index)
-                                 :name-and-type :u2]}       ; (:const :cst-name-and-type)]}
-    })
+                                 :name-and-type :u2]}})     ; (:const :cst-name-and-type)]}
+    
 
 
 (def constants-by-code
